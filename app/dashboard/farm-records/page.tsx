@@ -1,5 +1,14 @@
 import { supabase } from "@/lib/supabase";
-import { supabaseServer } from "@/lib/supabaseserver";
+import {
+  Table,
+  TableHeader,
+  TableRow,
+  TableHead,
+  TableBody,
+  TableCell,
+} from "@/components/ui/table";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 export default async function FarmRecordsPage() {
   const { data: records } = await supabase
@@ -8,46 +17,55 @@ export default async function FarmRecordsPage() {
     .order("created_at", { ascending: false });
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Farm Records</h1>
+    <div className="p-6 space-y-6">
+      <Card className="shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold">Farm Records</CardTitle>
+        </CardHeader>
 
-      <table className="w-full mt-6 border">
-        <thead>
-          <tr className="bg-gray-100 text-left">
-            <th className="p-2">Farmer</th>
-            <th className="p-2">Crop</th>
-            <th className="p-2">Season</th>
-            <th className="p-2">Land Area</th>
-            <th className="p-2">Input Cost</th>
-            <th className="p-2">Yield (kg)</th>
-            <th className="p-2">Profit (₹)</th>
-            <th className="p-2">View</th>
-          </tr>
-        </thead>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Farmer</TableHead>
+                <TableHead>Crop</TableHead>
+                <TableHead>Season</TableHead>
+                <TableHead>Land Area</TableHead>
+                <TableHead>Input Cost</TableHead>
+                <TableHead>Yield (kg)</TableHead>
+                <TableHead>Profit (₹)</TableHead>
+                <TableHead>View</TableHead>
+              </TableRow>
+            </TableHeader>
 
-        <tbody>
-          {records?.map((r) => (
-            <tr key={r.id} className="border-t">
-              <td className="p-2">{r.users?.name || "Unknown"}</td>
-              <td className="p-2">{r.crops?.name}</td>
-              <td className="p-2">{r.season}</td>
-              <td className="p-2">{r.land_area} acres</td>
-              <td className="p-2">₹{r.input_cost}</td>
-              <td className="p-2">{r.yield}</td>
-              <td className="p-2 font-semibold text-green-700">₹{r.profit}</td>
+            <TableBody>
+              {records?.map((r) => (
+                <TableRow key={r.id}>
+                  <TableCell className="font-medium">
+                    {r.users?.name || "Unknown"}
+                  </TableCell>
 
-              <td className="p-2">
-                <a
-                  href={`/dashboard/farm-records/${r.id}`}
-                  className="text-blue-600"
-                >
-                  Details
-                </a>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+                  <TableCell>{r.crops?.name}</TableCell>
+                  <TableCell>{r.season}</TableCell>
+                  <TableCell>{r.land_area} acres</TableCell>
+                  <TableCell>₹{r.input_cost}</TableCell>
+                  <TableCell>{r.yield}</TableCell>
+
+                  <TableCell className="font-semibold text-green-600">
+                    ₹{r.profit}
+                  </TableCell>
+
+                  <TableCell>
+                    <Button variant="outline" size="sm" asChild>
+                      <a href={`/dashboard/farm-records/${r.id}`}>Details</a>
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -2,9 +2,9 @@ export default function StatsCards({
   stats: { farmers, crops, farmRecords, avgProfit },
 }: {
   stats: {
-    farmers: number;
-    crops: number;
-    farmRecords: number;
+    farmers: number | null;
+    crops: number | null;
+    farmRecords: number | null;
     avgProfit: number;
   };
 }) {
@@ -18,7 +18,13 @@ export default function StatsCards({
   );
 }
 
-function Card({ label, value }: { label: string; value: number | string }) {
+function Card({
+  label,
+  value,
+}: {
+  label: string;
+  value: number | null | string;
+}) {
   return (
     <div className="p-4 bg-white shadow rounded-lg border">
       <p className="text-gray-500">{label}</p>

@@ -1,5 +1,15 @@
 import { supabase } from "@/lib/supabase";
-import { supabaseServer } from "@/lib/supabaseserver";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableHeader,
+  TableRow,
+  TableHead,
+  TableBody,
+  TableCell,
+} from "@/components/ui/table";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 export default async function BuyersPage() {
   const { data: buyers } = await supabase
@@ -8,51 +18,64 @@ export default async function BuyersPage() {
     .order("created_at", { ascending: false });
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Buyers & FPOs</h1>
+    <div className="p-6 space-y-6">
+      <Card className="shadow-sm">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="text-2xl font-bold">Buyers & FPOs</CardTitle>
 
-      <a
-        href="/dashboard/buyers/new"
-        className="bg-blue-600 text-white px-4 py-2 rounded"
-      >
-        + Add Buyer / FPO
-      </a>
+          <Button asChild className="bg-blue-600 hover:bg-blue-700">
+            <a href="/dashboard/buyers/new">+ Add Buyer / FPO</a>
+          </Button>
+        </CardHeader>
 
-      <table className="w-full mt-6 border">
-        <thead>
-          <tr className="bg-gray-100 text-left">
-            <th className="p-2">Name</th>
-            <th className="p-2">District</th>
-            <th className="p-2">Crop Needed</th>
-            <th className="p-2">Type</th>
-            <th className="p-2">Actions</th>
-          </tr>
-        </thead>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>District</TableHead>
+                <TableHead>Crop Needed</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
 
-        <tbody>
-          {buyers?.map((b) => (
-            <tr key={b.id} className="border-t">
-              <td className="p-2">{b.name}</td>
-              <td className="p-2">{b.district}</td>
-              <td className="p-2">{b.crop_needed}</td>
-              <td className="p-2">{b.type.toUpperCase()}</td>
+            <TableBody>
+              {buyers?.map((b) => (
+                <TableRow key={b.id}>
+                  <TableCell className="font-medium">{b.name}</TableCell>
+                  <TableCell>{b.district}</TableCell>
+                  <TableCell>{b.crop_needed}</TableCell>
 
-              <td className="p-2 flex gap-4">
-                <a
-                  className="text-blue-600"
-                  href={`/dashboard/buyers/edit/${b.id}`}
-                >
-                  Edit
-                </a>
+                  <TableCell>
+                    <Badge
+                      variant={b.type === "buyer" ? "default" : "secondary"}
+                      className="uppercase"
+                    >
+                      {b.type}
+                    </Badge>
+                  </TableCell>
 
-                <form action={`/dashboard/buyers/delete/${b.id}`} method="POST">
-                  <button className="text-red-600">Delete</button>
-                </form>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+                  <TableCell className="flex gap-3">
+                    <Button variant="outline" size="sm" asChild>
+                      <a href={`/dashboard/buyers/edit/${b.id}`}>Edit</a>
+                    </Button>
+
+                    <form
+                      action={`/dashboard/buyers/delete/${b.id}`}
+                      method="POST"
+                    >
+                      <Button variant="destructive" size="sm" type="submit">
+                        Delete
+                      </Button>
+                    </form>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   );
 }

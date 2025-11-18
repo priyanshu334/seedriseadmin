@@ -1,5 +1,15 @@
 import { supabase } from "@/lib/supabase";
-import { supabaseServer } from "@/lib/supabaseserver";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import {
+  Table,
+  TableHeader,
+  TableRow,
+  TableHead,
+  TableBody,
+  TableCell,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 export default async function EducationPage() {
   const { data: items } = await supabase
@@ -8,52 +18,58 @@ export default async function EducationPage() {
     .order("created_at", { ascending: false });
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Education Content</h1>
+    <div className="p-6 space-y-6">
+      <Card className="shadow-sm">
+        <CardHeader className="flex items-center justify-between">
+          <CardTitle className="text-2xl font-bold">
+            Education Content
+          </CardTitle>
 
-      <a
-        href="/dashboard/education/new"
-        className="bg-blue-600 text-white px-4 py-2 rounded"
-      >
-        + Add Content
-      </a>
+          <Button asChild className="bg-blue-600 hover:bg-blue-700">
+            <a href="/dashboard/education/new">+ Add Content</a>
+          </Button>
+        </CardHeader>
 
-      <table className="w-full mt-6 border">
-        <thead>
-          <tr className="bg-gray-100 text-left">
-            <th className="p-2">Title</th>
-            <th className="p-2">Type</th>
-            <th className="p-2">Language</th>
-            <th className="p-2">Actions</th>
-          </tr>
-        </thead>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Title</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Language</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
 
-        <tbody>
-          {items?.map((i) => (
-            <tr key={i.id} className="border-t">
-              <td className="p-2">{i.title}</td>
-              <td className="p-2 capitalize">{i.type}</td>
-              <td className="p-2">{i.language}</td>
+            <TableBody>
+              {items?.map((i) => (
+                <TableRow key={i.id}>
+                  <TableCell className="font-medium">{i.title}</TableCell>
+                  <TableCell>
+                    <Badge className="capitalize">{i.type}</Badge>
+                  </TableCell>
+                  <TableCell>{i.language}</TableCell>
 
-              <td className="p-2 flex gap-4">
-                <a
-                  className="text-blue-600"
-                  href={`/dashboard/education/edit/${i.id}`}
-                >
-                  Edit
-                </a>
+                  <TableCell className="flex gap-3">
+                    <Button variant="outline" size="sm" asChild>
+                      <a href={`/dashboard/education/edit/${i.id}`}>Edit</a>
+                    </Button>
 
-                <form
-                  action={`/dashboard/education/delete/${i.id}`}
-                  method="POST"
-                >
-                  <button className="text-red-600">Delete</button>
-                </form>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+                    <form
+                      action={`/dashboard/education/delete/${i.id}`}
+                      method="POST"
+                    >
+                      <Button variant="destructive" size="sm" type="submit">
+                        Delete
+                      </Button>
+                    </form>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -1,25 +1,23 @@
-import { supabaseServer } from "@/lib/supabaseserver";
+import { supabase } from "@/lib/supabase";
 import StatsCards from "./StatsCards";
 import ChartsSection from "./ChartsSection";
 
 export default async function DashboardPage() {
   // ===== Fetch data from Supabase =====
-
-  const { count: farmers } = await supabaseServer
+  const { count: farmers } = await supabase
     .from("users")
     .select("*", { count: "exact", head: true });
 
-  const { count: crops } = await supabaseServer
+  const { count: crops } = await supabase
     .from("crops")
     .select("*", { count: "exact", head: true });
 
-  const { data: records, count: farmRecords } = await supabaseServer
+  const { data: records, count: farmRecords } = await supabase
     .from("farm_records")
     .select("*", { count: "exact" });
 
-  // Average profit
   const avgProfit =
-    records?.length > 0
+    records && records.length > 0
       ? Math.round(records.reduce((a, b) => a + b.profit, 0) / records.length)
       : 0;
 
@@ -38,8 +36,7 @@ export default async function DashboardPage() {
     : [];
 
   // Crop Distribution
-  const cropDistribution = {};
-
+  const cropDistribution: Record<string, number> = {};
   records?.forEach((r) => {
     cropDistribution[r.crop_id] = (cropDistribution[r.crop_id] || 0) + 1;
   });
@@ -52,22 +49,28 @@ export default async function DashboardPage() {
   );
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Dashboard Analytics</h1>
+    <div className="p-6 space-y-8">
+      <h1 className="text-3xl font-bold">Dashboard Analytics</h1>
 
-      <StatsCards
-        stats={{
-          farmers,
-          crops,
-          farmRecords,
-          avgProfit,
-        }}
-      />
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatsCards
+          stats={{
+            farmers,
+            crops,
+            farmRecords,
+            avgProfit,
+          }}
+        />
+      </div>
 
-      <ChartsSection
-        profitTrendData={profitTrendData}
-        cropDistributionData={cropDistributionData}
-      />
+      {/* Charts Section */}
+      <div className="space-y-6">
+        <ChartsSection
+          profitTrendData={profitTrendData}
+          cropDistributionData={cropDistributionData}
+        />
+      </div>
     </div>
   );
 }
