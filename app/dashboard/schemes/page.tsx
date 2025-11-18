@@ -1,56 +1,88 @@
-import { supabaseServer } from "@/lib/supabaseserver";
+import { supabase } from "@/lib/supabase";
+import Link from "next/link";
+
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 
 export default async function SchemesPage() {
-  const { data: schemes } = await supabaseServer.from("schemes").select("*");
+  const { data: schemes } = await supabase.from("schemes").select("*");
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Schemes</h1>
+    <div className="p-6 max-w-8xl mx-auto">
+      <Card className="border rounded-2xl shadow-sm">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="text-2xl font-bold">Schemes</CardTitle>
 
-      <a
-        href="/dashboard/schemes/new"
-        className="bg-blue-600 text-white px-4 py-2 rounded"
-      >
-        + Add Scheme
-      </a>
+          <Button asChild className="rounded-xl">
+            <Link href="/dashboard/schemes/new">+ Add Scheme</Link>
+          </Button>
+        </CardHeader>
 
-      <table className="w-full mt-6 border">
-        <thead>
-          <tr className="bg-gray-100 text-left">
-            <th className="p-2">Title</th>
-            <th className="p-2">State</th>
-            <th className="p-2">Language</th>
-            <th className="p-2">Actions</th>
-          </tr>
-        </thead>
+        <Separator />
 
-        <tbody>
-          {schemes?.map((s) => (
-            <tr key={s.id} className="border-t">
-              <td className="p-2">{s.title}</td>
-              <td className="p-2">{s.state}</td>
-              <td className="p-2">{s.language}</td>
+        <CardContent className="mt-4">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Title</TableHead>
+                <TableHead>State</TableHead>
+                <TableHead>Language</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
 
-              <td className="p-2 flex gap-4">
-                <a
-                  className="text-blue-600"
-                  href={`/dashboard/schemes/edit/${s.id}`}
-                >
-                  Edit
-                </a>
+            <TableBody>
+              {schemes?.map((s) => (
+                <TableRow key={s.id} className="hover:bg-muted/30">
+                  <TableCell>{s.title}</TableCell>
+                  <TableCell>{s.state}</TableCell>
+                  <TableCell>{s.language}</TableCell>
 
-                {/* Delete Button */}
-                <form
-                  action={`/dashboard/schemes/delete/${s.id}`}
-                  method="POST"
-                >
-                  <button className="text-red-600">Delete</button>
-                </form>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+                  <TableCell className="text-right space-x-4">
+                    <Link
+                      href={`/dashboard/schemes/edit/${s.id}`}
+                      className="text-blue-600 hover:underline text-sm"
+                    >
+                      Edit
+                    </Link>
+
+                    {/* Delete Button */}
+                    <form
+                      action={`/dashboard/schemes/delete/${s.id}`}
+                      method="POST"
+                      className="inline-block"
+                    >
+                      <button className="text-red-600 hover:underline text-sm">
+                        Delete
+                      </button>
+                    </form>
+                  </TableCell>
+                </TableRow>
+              ))}
+
+              {!schemes?.length && (
+                <TableRow>
+                  <TableCell
+                    colSpan={4}
+                    className="text-center py-6 text-muted-foreground"
+                  >
+                    No schemes available. Add your first scheme!
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -1,7 +1,8 @@
+import { supabase } from "@/lib/supabase";
 import { supabaseServer } from "@/lib/supabaseserver";
 
 export default async function BuyersPage() {
-  const { data: buyers } = await supabaseServer
+  const { data: buyers } = await supabase
     .from("buyers")
     .select("*")
     .order("created_at", { ascending: false });

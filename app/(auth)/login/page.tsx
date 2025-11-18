@@ -1,8 +1,14 @@
 "use client";
 
 import { useState } from "react";
+// 1. Import useRouter instead of redirect
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 
 export default function LoginPage() {
+  // 2. Initialize the router hook
+  const router = useRouter();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -11,12 +17,28 @@ export default function LoginPage() {
     // Replace with your actual Supabase logic
     console.log("Login attempt:", { email, password });
 
-    // Simulated login - replace with actual Supabase call
-    if (email && password) {
-      alert("Login successful! (Demo mode)");
-    } else {
+    // Check if both fields are filled *before* the Supabase call for better UX
+    if (!email || !password) {
       alert("Please enter email and password");
+      return;
     }
+
+    // Call your actual Supabase login logic
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    console.log("Supabase response:", { data, error });
+
+    if (error) {
+      alert("Error: " + error.message);
+      return;
+    }
+
+    // 3. Use router.push() for client-side navigation
+    alert("Login successful!");
+    router.push("/dashboard");
+    // The simulated login check is removed as it's now handled by the Supabase response logic
   }
 
   return (

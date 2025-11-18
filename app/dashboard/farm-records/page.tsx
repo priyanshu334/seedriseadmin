@@ -1,7 +1,8 @@
+import { supabase } from "@/lib/supabase";
 import { supabaseServer } from "@/lib/supabaseserver";
 
 export default async function FarmRecordsPage() {
-  const { data: records } = await supabaseServer
+  const { data: records } = await supabase
     .from("farm_records")
     .select("*, crops(name), users(name)")
     .order("created_at", { ascending: false });

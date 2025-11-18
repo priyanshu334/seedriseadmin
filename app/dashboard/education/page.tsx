@@ -1,7 +1,8 @@
+import { supabase } from "@/lib/supabase";
 import { supabaseServer } from "@/lib/supabaseserver";
 
 export default async function EducationPage() {
-  const { data: items } = await supabaseServer
+  const { data: items } = await supabase
     .from("education_content")
     .select("*")
     .order("created_at", { ascending: false });

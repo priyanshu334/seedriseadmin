@@ -4,10 +4,15 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 
+interface Crop {
+  id: string;
+  name: string;
+}
+
 export default function NewPrice() {
   const router = useRouter();
 
-  const [crops, setCrops] = useState([]);
+  const [crops, setCrops] = useState<Crop[]>([]);
   const [form, setForm] = useState({
     crop_id: "",
     location: "",
@@ -48,7 +53,6 @@ export default function NewPrice() {
     <div className="p-6 max-w-2xl mx-auto space-y-4">
       <h1 className="text-2xl font-bold">Add Market Price</h1>
 
-      {/* Crop select */}
       <select
         name="crop_id"
         className="border p-2 rounded w-full"

@@ -1,7 +1,8 @@
+import { supabase } from "@/lib/supabase";
 import { supabaseServer } from "@/lib/supabaseserver";
 
 export default async function PricesPage() {
-  const { data: prices } = await supabaseServer
+  const { data: prices } = await supabase
     .from("market_prices")
     .select("*, crops(name)");
 
