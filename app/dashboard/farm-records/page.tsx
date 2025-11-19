@@ -11,11 +11,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
 export default async function FarmRecordsPage() {
-  const { data: records } = await supabase
-    .from("farm_records")
-    .select("*, crops(name), users(name)")
-    .order("created_at", { ascending: false });
+  const { data: records } = await supabase.from("farm_records").select("*");
 
+  console.log(records);
   return (
     <div className="p-6 space-y-6">
       <Card className="shadow-sm">

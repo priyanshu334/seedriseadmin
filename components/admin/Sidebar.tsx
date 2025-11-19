@@ -9,6 +9,7 @@ import {
   IndianRupee,
   BookMarked,
   Menu,
+  BarChart2,
 } from "lucide-react";
 
 import { usePathname } from "next/navigation";
@@ -26,6 +27,11 @@ const menuItems = [
   { name: "Buyers / FPOs", href: "/dashboard/buyers", icon: Store },
   { name: "Farm Records", href: "/dashboard/farm-records", icon: Users },
   { name: "Education", href: "/dashboard/education", icon: BookOpen },
+  {
+    name: "customer queries ",
+    href: "/dashnoard/customerqueries",
+    icon: Users,
+  },
 ];
 
 export default function Sidebar() {

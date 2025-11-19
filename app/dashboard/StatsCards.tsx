@@ -26,7 +26,7 @@ function Card({
   value: number | null | string;
 }) {
   return (
-    <div className="p-4 bg-white shadow rounded-lg border">
+    <div className="p-1 bg-white shadow rounded-lg border">
       <p className="text-gray-500">{label}</p>
       <p className="text-2xl font-bold mt-1">{value}</p>
     </div>
