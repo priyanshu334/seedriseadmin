@@ -1,10 +1,14 @@
-import { NextResponse } from "next/server";
-import { supabaseServer } from "@/lib/supabaseserver"; 
+import { NextRequest, NextResponse } from "next/server";
+import { supabaseServer } from "@/lib/supabaseserver";
+import { supabase } from "@/lib/supabase";
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
-  const { id } = params;
+export async function POST(
+req: NextRequest,
+context: { params: { id: string } }
+) {
+const { id } = context.params;
 
-  await supabaseServer.from("schemes").delete().eq("id", id);
+await supabase.from("schemes").delete().eq("id", id);
 
-  return NextResponse.redirect("/dashboard/schemes");
+return NextResponse.redirect("/dashboard/schemes");
 }

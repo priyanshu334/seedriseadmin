@@ -1,10 +1,13 @@
-import { NextResponse } from "next/server";
-import { supabaseServer } from "@/lib/supabaseserver";
+import { NextRequest, NextResponse } from "next/server";
+import { supabase } from "@/lib/supabase";
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
-  const { id } = params;
+export async function POST(
+req: NextRequest,
+{ params }: { params: { id: string } }
+) {
+const { id } = params;
 
-  await supabaseServer.from("market_prices").delete().eq("id", id);
+await supabase.from("market_prices").delete().eq("id", id);
 
-  return NextResponse.redirect("/dashboard/prices");
+return NextResponse.redirect(new URL("/dashboard/prices", req.url));
 }
