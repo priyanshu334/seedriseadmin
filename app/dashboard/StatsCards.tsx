@@ -9,11 +9,11 @@ export default function StatsCards({
   };
 }) {
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-      <Card label="Total Farmers" value={farmers} />
-      <Card label="Total Crops" value={crops} />
-      <Card label="Farm Records" value={farmRecords} />
-      <Card label="Avg Profit" value={`₹${avgProfit}`} />
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 p-4">
+      <Card label="Total Farmers" value={farmers} icon="🌾" />
+      <Card label="Total Crops" value={crops} icon="🌱" />
+      <Card label="Farm Records" value={farmRecords} icon="📜" />
+      <Card label="Avg Profit" value={`₹${avgProfit}`} icon="💰" />
     </div>
   );
 }
@@ -21,14 +21,17 @@ export default function StatsCards({
 function Card({
   label,
   value,
+  icon,
 }: {
   label: string;
   value: number | null | string;
+  icon: string;
 }) {
   return (
-    <div className="p-1 bg-white shadow rounded-lg border">
-      <p className="text-gray-500">{label}</p>
-      <p className="text-2xl font-bold mt-1">{value}</p>
+    <div className="flex flex-col items-center justify-center p-6 bg-green-100 border border-green-300 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
+      <div className="text-4xl mb-2">{icon}</div>
+      <p className="text-gray-700 font-semibold text-lg">{label}</p>
+      <p className="text-3xl font-bold text-green-800 mt-2">{value}</p>
     </div>
   );
 }

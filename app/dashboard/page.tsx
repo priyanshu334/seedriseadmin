@@ -1,130 +1,155 @@
+// app/dashboard/page.tsx
 import { supabase } from "@/lib/supabase";
 import StatsCards from "./StatsCards";
 import ChartsSection from "./ChartsSection";
 
+// ────────────────────────────── Types ──────────────────────────────
+interface FarmRecord {
+  crop_name: string | null;
+  profit: number | null;
+  created_at: string | null;
+  expected_yield: number | null;
+  actual_yield: number | null;
+}
+
+interface CropCost {
+  seed_cost: number | null;
+  fertilizer_cost: number | null;
+  irrigation_cost: number | null;
+  labor_cost: number | null;
+}
+
+// Accept either object or array for crops (Supabase may return either)
+interface MarketPriceRow {
+  crop_id: string;
+  price: number;
+  date: string;
+  crops: { name: string } | { name: string }[] | null;
+}
+
+// ──────────────────────── Dashboard Page ────────────────────────
 export default async function DashboardPage() {
-  // ===== Basic Counts
-  const { count: farmers } = await supabase
-    .from("users")
-    .select("*", { count: "exact", head: true });
+  // 1. Pure date – calculated once at request time (allowed in server components)
+  const sixMonthsAgo = new Date();
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+  const dateFilter = sixMonthsAgo.toISOString().split("T")[0]; // "YYYY-MM-DD"
 
-  const { count: crops } = await supabase
-    .from("crops")
-    .select("*", { count: "exact", head: true });
+  // 2. Run all queries in parallel
+  const [
+    { count: farmers },
+    { count: cropsCount },
+    { data: farmRecordsRaw },
+    { data: priceRaw },
+    { data: allCrops },
+  ] = await Promise.all([
+    supabase.from("users").select("*", { count: "exact", head: true }),
+    supabase.from("crops").select("*", { count: "exact", head: true }),
+    supabase.from("farm_records").select("*", { count: "exact" }),
+    supabase
+      .from("market_prices")
+      .select("crop_id, price, date, crops!inner(name)")
+      .gte("date", dateFilter)
+      .order("date", { ascending: true }),
+    supabase
+      .from("crops")
+      .select("seed_cost, fertilizer_cost, irrigation_cost, labor_cost"),
+  ]);
 
-  const { data: records, count: farmRecords } = await supabase
-    .from("farm_records")
-    .select("*", { count: "exact" });
+  // ─────────────────────── Safe typed data ───────────────────────
+  const records = (farmRecordsRaw ?? []) as FarmRecord[];
+  const priceRows = (priceRaw ?? []) as MarketPriceRow[];
+  const cropCosts = (allCrops ?? []) as CropCost[];
 
+  // helper to normalize crop name whether crops is object or array
+  const getCropName = (row: MarketPriceRow) => {
+    if (Array.isArray(row.crops)) return row.crops[0]?.name ?? "Unknown";
+    return row.crops?.name ?? "Unknown";
+  };
+
+  // 1. Stats
   const avgProfit =
-    records && records.length > 0
+    records.length > 0
       ? Math.round(
-          records.reduce((a, b) => a + (b.profit ?? 0), 0) / records.length
+          records.reduce((s, r) => s + (r.profit ?? 0), 0) / records.length
         )
       : 0;
 
-  // 1. Profit Trend
-  const profitTrendData = records
-    ? Object.entries(
-        records.reduce((acc: Record<string, number>, rec) => {
-          const month = rec.created_at?.substring(0, 7) ?? "Unknown";
-          acc[month] = (acc[month] || 0) + (rec.profit ?? 0);
-          return acc;
-        }, {})
-      )
-        .map(([month, profit]) => ({ month, profit }))
-        .sort((a, b) => a.month.localeCompare(b.month))
-    : [];
-
-  // 2. Crop Distribution
-  const cropDistributionData =
-    records?.reduce((acc: Record<string, number>, r) => {
-      const cropName = r.crop_name ?? "Unknown Crop";
-      acc[cropName] = (acc[cropName] || 0) + 1;
+  // 2. Profit Trend (monthly)
+  const profitTrendData = Object.entries(
+    records.reduce((acc, r) => {
+      const month = r.created_at?.slice(0, 7) ?? "Unknown";
+      acc[month] = (acc[month] ?? 0) + (r.profit ?? 0);
       return acc;
-    }, {} as Record<string, number>) ?? {};
+    }, {} as Record<string, number>)
+  )
+    .map(([month, profit]) => ({ month, profit }))
+    .sort((a, b) => a.month.localeCompare(b.month));
 
-  const cropDistributionFormatted = Object.entries(cropDistributionData).map(
-    ([crop, value]) => ({ crop, value })
-  );
+  // 3. Crop Distribution
+  const cropDistributionFormatted = Object.entries(
+    records.reduce((acc, r) => {
+      const crop = r.crop_name ?? "Unknown";
+      acc[crop] = (acc[crop] ?? 0) + 1;
+      return acc;
+    }, {} as Record<string, number>)
+  ).map(([crop, value]) => ({ crop, value }));
 
-  // 3. Market Price Trends (Last 6 months)
-  const sixMonthsAgo = new Date();
-  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-  const dateString = sixMonthsAgo.toISOString().split("T")[0];
+  // 4. Market Price Trends (Top 5 crops) – reducer handles either crops object or array via getCropName
+  const priceTrendsData = priceRows.reduce<
+    { crop: string; data: { date: string; price: number }[] }[]
+  >((acc, row) => {
+    const cropName = getCropName(row);
+    const existing = acc.find((x) => x.crop === cropName);
+    const entry = { date: row.date, price: row.price ?? 0 };
 
-  const { data: priceRaw } = await supabase
-    .from("market_prices")
-    .select("crop_id, price, date, crops!inner(name)")
-    .gte("date", dateString)
-    .order("date", { ascending: true });
+    if (existing) {
+      existing.data.push(entry);
+    } else {
+      acc.push({ crop: cropName, data: [entry] });
+    }
+    return acc;
+  }, []);
 
-  const priceTrendsData =
-    priceRaw?.reduce(
-      (acc: { crop: string; data: { date: string; price: number }[] }[], p) => {
-        const cropName = p.crops?.name ?? "Unknown";
-        const existing = acc.find((item) => item.crop === cropName);
-        const entry = { date: p.date ?? "", price: p.price ?? 0 };
-
-        if (existing) {
-          existing.data.push(entry);
-        } else {
-          acc.push({ crop: cropName, data: [entry] });
-        }
-        return acc;
-      },
-      []
-    ) ?? [];
-
-  // Limit to top 5 crops with most data points
   const priceTrendsFinal = priceTrendsData
     .sort((a, b) => b.data.length - a.data.length)
     .slice(0, 5);
 
-  // 4. Most Profitable Crops
-  const profitableCropsData =
-    records?.reduce((acc: Map<string, { total: number; count: number }>, r) => {
-      const cropName = r.crop_name ?? "Unknown Crop";
-      const profit = r.profit ?? 0;
-      const current = acc.get(cropName) || { total: 0, count: 0 };
-      acc.set(cropName, {
-        total: current.total + profit,
-        count: current.count + 1,
-      });
-      return acc;
-    }, new Map()) ?? new Map();
+  // 5. Most Profitable Crops
+  const profitableMap = records.reduce((map, r) => {
+    const crop = r.crop_name ?? "Unknown";
+    const profit = r.profit ?? 0;
+    const cur = map.get(crop) ?? { total: 0, count: 0 };
+    map.set(crop, { total: cur.total + profit, count: cur.count + 1 });
+    return map;
+  }, new Map<string, { total: number; count: number }>());
 
-  const profitableCropsFormatted = Array.from(profitableCropsData.entries())
+  const profitableCropsFormatted = Array.from(profitableMap)
     .map(([crop, { total, count }]) => ({
       crop,
-      avgProfit: Math.round(total / count),
+      avgProfit: count > 0 ? Math.round(total / count) : 0,
     }))
     .sort((a, b) => b.avgProfit - a.avgProfit)
     .slice(0, 8);
 
-  // 5. Average Cost Breakdown
-  const { data: allCrops } = await supabase
-    .from("crops")
-    .select("seed_cost, fertilizer_cost, irrigation_cost, labor_cost");
-
+  // 6. Cost Breakdown
   const avgCosts =
-    allCrops && allCrops.length > 0
+    cropCosts.length > 0
       ? {
           seed: Math.round(
-            allCrops.reduce((sum, c) => sum + (c.seed_cost ?? 0), 0) /
-              allCrops.length
+            cropCosts.reduce((s, c) => s + (c.seed_cost ?? 0), 0) /
+              cropCosts.length
           ),
           fertilizer: Math.round(
-            allCrops.reduce((sum, c) => sum + (c.fertilizer_cost ?? 0), 0) /
-              allCrops.length
+            cropCosts.reduce((s, c) => s + (c.fertilizer_cost ?? 0), 0) /
+              cropCosts.length
           ),
           irrigation: Math.round(
-            allCrops.reduce((sum, c) => sum + (c.irrigation_cost ?? 0), 0) /
-              allCrops.length
+            cropCosts.reduce((s, c) => s + (c.irrigation_cost ?? 0), 0) /
+              cropCosts.length
           ),
           labor: Math.round(
-            allCrops.reduce((sum, c) => sum + (c.labor_cost ?? 0), 0) /
-              allCrops.length
+            cropCosts.reduce((s, c) => s + (c.labor_cost ?? 0), 0) /
+              cropCosts.length
           ),
         }
       : { seed: 0, fertilizer: 0, irrigation: 0, labor: 0 };
@@ -134,26 +159,33 @@ export default async function DashboardPage() {
     { name: "Fertilizer", value: avgCosts.fertilizer },
     { name: "Irrigation", value: avgCosts.irrigation },
     { name: "Labor", value: avgCosts.labor },
-  ].filter((item) => item.value > 0);
+  ].filter((i) => i.value > 0);
 
-  // 6. Yield Performance
-  const yieldData =
-    records
-      ?.map((r) => ({
-        crop: r.crop_name ?? "Unknown",
-        expected: Number(r.expected_yield ?? 0),
-        actual: Number(r.actual_yield ?? 0),
-      }))
-      .filter((r) => r.expected > 0 || r.actual > 0)
-      .slice(0, 20) ?? [];
+  // 7. Yield Data
+  const yieldData = records
+    .map((r) => ({
+      crop: r.crop_name ?? "Unknown",
+      expected: Number(r.expected_yield ?? 0),
+      actual: Number(r.actual_yield ?? 0),
+    }))
+    .filter((r) => r.expected > 0 || r.actual > 0)
+    .slice(0, 20);
 
+  // ────────────────────────── Render ─────────────────────────────
   return (
-    <div className="p-6 space-y-8">
-      <h1 className="text-3xl font-bold">Dashboard Analytics</h1>
+    <div className="p-6 space-y-8 bg-yellow-50 min-h-screen">
+      <h1 className="text-3xl font-bold text-green-900 mb-4">
+        Farm Dashboard Analytics
+      </h1>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatsCards stats={{ farmers, crops, farmRecords, avgProfit }} />
-      </div>
+      <StatsCards
+        stats={{
+          farmers: farmers ?? 0,
+          crops: cropsCount ?? 0,
+          farmRecords: records.length,
+          avgProfit,
+        }}
+      />
 
       <ChartsSection
         profitTrendData={profitTrendData}

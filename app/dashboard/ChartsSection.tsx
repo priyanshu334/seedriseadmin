@@ -22,23 +22,16 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  ChartLegend,
-  ChartLegendContent,
-} from "@/components/ui/chart";
 
 const COLORS = [
-  "#6366F1",
-  "#22C55E",
-  "#F59E0B",
-  "#EF4444",
-  "#0EA5E9",
-  "#8B5CF6",
-  "#EC4899",
-  "#14B8A6",
+  "#22C55E", // green
+  "#F59E0B", // orange
+  "#A16207", // brown
+  "#D97706", // amber
+  "#84CC16", // lime
+  "#15803D", // dark green
+  "#FBBF24", // yellow
+  "#4B5563", // gray
 ];
 
 const formatCurrency = (value: number) => `₹${value.toLocaleString("en-IN")}`;
@@ -68,270 +61,201 @@ export default function ChartsSection({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mt-8">
       {/* 1. Profit Trend */}
-      <Card className="shadow-lg border-0">
+      <Card className="shadow-lg border-0 bg-green-50 rounded-xl">
         <CardHeader className="pb-3">
-          <CardTitle className="text-lg font-bold">
+          <CardTitle className="text-lg font-bold text-green-800">
             Monthly Profit Trend
           </CardTitle>
           <CardDescription>Total profit earned each month</CardDescription>
         </CardHeader>
-        <CardContent>
-          <ChartContainer
-            config={{
-              profit: { label: "Profit", theme: { light: "#6366F1" } },
-            }}
-            className="h-64"
-          >
-            <ResponsiveContainer>
-              <LineChart data={profitTrendData}>
-                <CartesianGrid strokeDasharray="4 4" stroke="#e5e7eb" />
-                <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                <YAxis tickFormatter={formatCurrency} tick={{ fontSize: 12 }} />
-                <ChartTooltip
-                  content={
-                    <ChartTooltipContent
-                      formatter={(v) => formatCurrency(Number(v))}
-                    />
-                  }
-                />
-                <Line
-                  type="monotone"
-                  dataKey="profit"
-                  stroke="#6366F1"
-                  strokeWidth={3}
-                  dot={{ r: 5 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </ChartContainer>
+        <CardContent className="bg-green-100 rounded-lg p-2">
+          <ResponsiveContainer width="100%" height={250}>
+            <LineChart data={profitTrendData}>
+              <CartesianGrid strokeDasharray="4 4" stroke="#d1fae5" />
+              <XAxis dataKey="month" tick={{ fontSize: 12, fill: "#065f46" }} />
+              <YAxis
+                tickFormatter={formatCurrency}
+                tick={{ fontSize: 12, fill: "#065f46" }}
+              />
+              <Tooltip formatter={(v) => formatCurrency(Number(v))} />
+              <Line
+                type="monotone"
+                dataKey="profit"
+                stroke="#16a34a"
+                strokeWidth={3}
+                dot={{ r: 5, fill: "#16a34a" }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
         </CardContent>
       </Card>
 
       {/* 2. Crop Distribution */}
-      <Card className="shadow-lg border-0">
+      <Card className="shadow-lg border-0 bg-yellow-50 rounded-xl">
         <CardHeader className="pb-3">
-          <CardTitle className="text-lg font-bold">Crop Distribution</CardTitle>
+          <CardTitle className="text-lg font-bold text-amber-800">
+            Crop Distribution
+          </CardTitle>
           <CardDescription>Farms growing each crop</CardDescription>
         </CardHeader>
-        <CardContent>
-          <ChartContainer
-            config={Object.fromEntries(
-              cropDistributionData.map((d, i) => [
-                d.crop,
-                { label: d.crop, theme: { light: COLORS[i % COLORS.length] } },
-              ])
-            )}
-            className="h-64"
-          >
-            <ResponsiveContainer>
-              <PieChart>
-                <Pie
-                  data={cropDistributionData}
-                  dataKey="value"
-                  nameKey="crop"
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={50}
-                  outerRadius={80}
-                  paddingAngle={2}
-                  label={({ value }) => `${value} farms`}
-                >
-                  {cropDistributionData.map((_, i) => (
-                    <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                  ))}
-                </Pie>
-                <ChartTooltip content={<ChartTooltipContent />} />
-              </PieChart>
-            </ResponsiveContainer>
-          </ChartContainer>
+        <CardContent className="bg-yellow-100 rounded-lg p-2">
+          <ResponsiveContainer width="100%" height={250}>
+            <PieChart>
+              <Pie
+                data={cropDistributionData}
+                dataKey="value"
+                nameKey="crop"
+                cx="50%"
+                cy="50%"
+                innerRadius={50}
+                outerRadius={80}
+                paddingAngle={2}
+                label={({ value }) => `${value} farms`}
+              >
+                {cropDistributionData.map((_, i) => (
+                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip />
+              <Legend verticalAlign="bottom" height={36} />
+            </PieChart>
+          </ResponsiveContainer>
         </CardContent>
       </Card>
 
-      {/* 3. Market Price Trends (Top Crops) */}
-      <Card className="shadow-lg border-0">
+      {/* 3. Market Price Trends */}
+      <Card className="shadow-lg border-0 bg-green-50 rounded-xl">
         <CardHeader className="pb-3">
-          <CardTitle className="text-lg font-bold">
+          <CardTitle className="text-lg font-bold text-green-800">
             Market Price Trends
           </CardTitle>
           <CardDescription>Last 6 months (top crops)</CardDescription>
         </CardHeader>
-        <CardContent>
-          <ChartContainer
-            config={Object.fromEntries(
-              priceTrendsData.map((c, i) => [
-                c.crop,
-                { label: c.crop, theme: { light: COLORS[i % COLORS.length] } },
-              ])
-            )}
-            className="h-64"
-          >
-            <ResponsiveContainer>
-              <LineChart>
-                <CartesianGrid strokeDasharray="4 4" stroke="#e5e7eb" />
-                <XAxis
-                  dataKey="date"
-                  tickFormatter={formatDate}
-                  tick={{ fontSize: 11 }}
-                  angle={-30}
-                  height={60}
+        <CardContent className="bg-green-100 rounded-lg p-2">
+          <ResponsiveContainer width="100%" height={250}>
+            <LineChart>
+              <CartesianGrid strokeDasharray="4 4" stroke="#d1fae5" />
+              <XAxis
+                dataKey="date"
+                tickFormatter={formatDate}
+                tick={{ fontSize: 11, fill: "#065f46" }}
+                angle={-30}
+                height={60}
+              />
+              <YAxis
+                tickFormatter={formatCurrency}
+                tick={{ fontSize: 11, fill: "#065f46" }}
+              />
+              <Tooltip formatter={(v) => formatCurrency(Number(v))} />
+              <Legend verticalAlign="top" />
+              {priceTrendsData.slice(0, 4).map((crop, i) => (
+                <Line
+                  key={crop.crop}
+                  type="monotone"
+                  data={crop.data}
+                  name={crop.crop}
+                  dataKey="price"
+                  stroke={COLORS[i % COLORS.length]}
+                  strokeWidth={2.5}
+                  dot={false}
                 />
-                <YAxis tickFormatter={formatCurrency} tick={{ fontSize: 11 }} />
-                <ChartTooltip
-                  content={
-                    <ChartTooltipContent
-                      formatter={(v) => formatCurrency(Number(v))}
-                    />
-                  }
-                />
-                <ChartLegend content={<ChartLegendContent />} />
-                {priceTrendsData.slice(0, 4).map((crop, i) => (
-                  <Line
-                    key={crop.crop}
-                    type="monotone"
-                    data={crop.data}
-                    name={crop.crop}
-                    dataKey="price"
-                    stroke={COLORS[i % COLORS.length]}
-                    strokeWidth={2.5}
-                    dot={false}
-                  />
-                ))}
-              </LineChart>
-            </ResponsiveContainer>
-          </ChartContainer>
+              ))}
+            </LineChart>
+          </ResponsiveContainer>
         </CardContent>
       </Card>
 
       {/* 4. Most Profitable Crops */}
-      <Card className="shadow-lg border-0">
+      <Card className="shadow-lg border-0 bg-yellow-50 rounded-xl">
         <CardHeader className="pb-3">
-          <CardTitle className="text-lg font-bold">
+          <CardTitle className="text-lg font-bold text-amber-800">
             Top Profitable Crops
           </CardTitle>
           <CardDescription>Average profit per farmer</CardDescription>
         </CardHeader>
-        <CardContent>
-          <ChartContainer
-            config={{
-              avgProfit: { label: "Avg Profit", theme: { light: "#22C55E" } },
-            }}
-            className="h-64"
-          >
-            <ResponsiveContainer>
-              <BarChart data={profitableCropsData} layout="horizontal">
-                <CartesianGrid strokeDasharray="4 4" stroke="#e5e7eb" />
-                <XAxis
-                  type="number"
-                  tickFormatter={formatCurrency}
-                  tick={{ fontSize: 11 }}
-                />
-                <YAxis
-                  dataKey="crop"
-                  type="category"
-                  width={90}
-                  tick={{ fontSize: 11 }}
-                />
-                <ChartTooltip
-                  content={
-                    <ChartTooltipContent
-                      formatter={(v) => formatCurrency(Number(v))}
-                    />
-                  }
-                />
-                <Bar dataKey="avgProfit" fill="#22C55E" radius={[0, 8, 8, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </ChartContainer>
+        <CardContent className="bg-yellow-100 rounded-lg p-2">
+          <ResponsiveContainer width="100%" height={250}>
+            <BarChart
+              data={profitableCropsData}
+              layout="horizontal"
+              margin={{ left: 10 }}
+            >
+              <CartesianGrid strokeDasharray="4 4" stroke="#fde68a" />
+              <XAxis
+                type="number"
+                tickFormatter={formatCurrency}
+                tick={{ fontSize: 11, fill: "#92400e" }}
+              />
+              <YAxis
+                dataKey="crop"
+                type="category"
+                width={90}
+                tick={{ fontSize: 11, fill: "#92400e" }}
+              />
+              <Tooltip formatter={(v) => formatCurrency(Number(v))} />
+              <Bar dataKey="avgProfit" fill="#f59e0b" radius={[8, 8, 8, 8]} />
+            </BarChart>
+          </ResponsiveContainer>
         </CardContent>
       </Card>
 
       {/* 5. Cost Breakdown */}
-      <Card className="shadow-lg border-0">
+      <Card className="shadow-lg border-0 bg-green-50 rounded-xl">
         <CardHeader className="pb-3">
-          <CardTitle className="text-lg font-bold">
+          <CardTitle className="text-lg font-bold text-green-800">
             Average Cost Structure
           </CardTitle>
           <CardDescription>Per crop cultivation cost</CardDescription>
         </CardHeader>
-        <CardContent>
-          <ChartContainer
-            config={Object.fromEntries(
-              costBreakdownData.map((c, i) => [
-                c.name,
-                { label: c.name, theme: { light: COLORS[i % COLORS.length] } },
-              ])
-            )}
-            className="h-64"
-          >
-            <ResponsiveContainer>
-              <PieChart>
-                <Pie
-                  data={costBreakdownData}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={85}
-                  label={({ name, value }) =>
-                    `${name}: ${formatCurrency(value)}`
-                  }
-                  labelLine={{ fontSize: 11 }}
-                >
-                  {costBreakdownData.map((_, i) => (
-                    <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                  ))}
-                </Pie>
-                <ChartTooltip
-                  content={
-                    <ChartTooltipContent
-                      formatter={(v) => formatCurrency(Number(v))}
-                    />
-                  }
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </ChartContainer>
+        <CardContent className="bg-green-100 rounded-lg p-2">
+          <ResponsiveContainer width="100%" height={250}>
+            <PieChart>
+              <Pie
+                data={costBreakdownData}
+                dataKey="value"
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                outerRadius={85}
+                label={({ name, value }) => `${name}: ${formatCurrency(value)}`}
+              >
+                {costBreakdownData.map((_, i) => (
+                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip formatter={(v) => formatCurrency(Number(v))} />
+              <Legend verticalAlign="bottom" height={36} />
+            </PieChart>
+          </ResponsiveContainer>
         </CardContent>
       </Card>
 
       {/* 6. Yield vs Expected */}
-      <Card className="shadow-lg border-0">
+      <Card className="shadow-lg border-0 bg-yellow-50 rounded-xl">
         <CardHeader className="pb-3">
-          <CardTitle className="text-lg font-bold">Yield Performance</CardTitle>
+          <CardTitle className="text-lg font-bold text-amber-800">
+            Yield Performance
+          </CardTitle>
           <CardDescription>Actual vs Expected (tons/ha)</CardDescription>
         </CardHeader>
-        <CardContent>
-          <ChartContainer
-            config={{
-              expected: {
-                label: "Expected",
-                theme: { light: "#94a3b8", dark: "" },
-              },
-              actual: {
-                label: "Actual",
-                theme: { light: "#22C55E", dark: "" },
-              },
-            }}
-            className="h-64"
-          >
-            <ResponsiveContainer>
-              <BarChart data={yieldData}>
-                <CartesianGrid strokeDasharray="4 4" stroke="#e5e7eb" />
-                <XAxis
-                  dataKey="crop"
-                  angle={-45}
-                  textAnchor="end"
-                  height={70}
-                  tick={{ fontSize: 11 }}
-                />
-                <YAxis tick={{ fontSize: 11 }} />
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <ChartLegend content={<ChartLegendContent />} />
-                <Bar dataKey="expected" fill="#94a3b8" />
-                <Bar dataKey="actual" fill="#22C55E" />
-              </BarChart>
-            </ResponsiveContainer>
-          </ChartContainer>
+        <CardContent className="bg-yellow-100 rounded-lg p-2">
+          <ResponsiveContainer width="100%" height={250}>
+            <BarChart data={yieldData} margin={{ bottom: 20 }}>
+              <CartesianGrid strokeDasharray="4 4" stroke="#fde68a" />
+              <XAxis
+                dataKey="crop"
+                angle={-45}
+                textAnchor="end"
+                height={70}
+                tick={{ fontSize: 11, fill: "#92400e" }}
+              />
+              <YAxis tick={{ fontSize: 11, fill: "#92400e" }} />
+              <Tooltip />
+              <Legend verticalAlign="top" />
+              <Bar dataKey="expected" fill="#94a3b8" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="actual" fill="#16a34a" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
         </CardContent>
       </Card>
     </div>
