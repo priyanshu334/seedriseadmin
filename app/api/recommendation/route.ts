@@ -1,6 +1,18 @@
 import { NextResponse } from "next/server";
 
-// Define the structure of a crop recommendation
+// CORS headers
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+};
+
+// Handle preflight request
+export async function OPTIONS() {
+  return NextResponse.json({}, { headers: corsHeaders });
+}
+
+// Interface for crop recommendations
 interface CropRecommendation {
   name: string;
   profit: number;
@@ -16,56 +28,66 @@ export async function POST(req: Request) {
     if (!soil || !water || !land) {
       return NextResponse.json(
         { error: "Required fields missing" },
-        { status: 400 }
+        { status: 400, headers: corsHeaders }
       );
     }
 
-    // Properly typed array
+    // Final output array
     const crops: CropRecommendation[] = [];
 
-    /** --- Logic Based on Soil Type --- **/
+    /** --------------------------  
+     *  SOIL-BASED LOGIC  
+     * -------------------------- **/
     if (soil.includes("काली") || soil.includes("black")) {
-      crops.push({
-        name: "कपास (Cotton)",
-        profit: 45000,
-        yield: 850,
-        reason: "काली मिट्टी कपास उत्पादन के लिए सबसे उपयुक्त होती है।",
-      });
-      crops.push({
-        name: "सोयाबीन (Soybean)",
-        profit: 40000,
-        yield: 920,
-        reason: "काली मिट्टी में नमी अच्छी रहती है, जो सोयाबीन के लिए उपयोगी है।",
-      });
+      crops.push(
+        {
+          name: "कपास (Cotton)",
+          profit: 45000,
+          yield: 850,
+          reason: "काली मिट्टी कपास उत्पादन के लिए सबसे उपयुक्त होती है।",
+        },
+        {
+          name: "सोयाबीन (Soybean)",
+          profit: 40000,
+          yield: 920,
+          reason: "काली मिट्टी में नमी अच्छी रहती है, जो सोयाबीन के लिए उपयोगी है।",
+        }
+      );
     } else if (soil.includes("दोमट") || soil.includes("loamy")) {
-      crops.push({
-        name: "गेहूं (Wheat)",
-        profit: 55000,
-        yield: 1250,
-        reason: "दोमट मिट्टी गेहूं उत्पादन के लिए सबसे अच्छी मानी जाती है।",
-      });
-      crops.push({
-        name: "चावल (Rice)",
-        profit: 65000,
-        yield: 1400,
-        reason: "दोमट मिट्टी पानी रोक कर रखती है, चावल के लिए उपयोगी।",
-      });
+      crops.push(
+        {
+          name: "गेहूं (Wheat)",
+          profit: 55000,
+          yield: 1250,
+          reason: "दोमट मिट्टी गेहूं उत्पादन के लिए सबसे अच्छी मानी जाती है।",
+        },
+        {
+          name: "चावल (Rice)",
+          profit: 65000,
+          yield: 1400,
+          reason: "दोमट मिट्टी पानी रोक कर रखती है, चावल के लिए उपयोगी।",
+        }
+      );
     } else if (soil.includes("रेतीली") || soil.includes("sandy")) {
-      crops.push({
-        name: "मूंगफली (Groundnut)",
-        profit: 38000,
-        yield: 600,
-        reason: "रेतीली मिट्टी में मूंगफली अच्छा उत्पादन देती है।",
-      });
-      crops.push({
-        name: "तिल (Sesame)",
-        profit: 32000,
-        yield: 500,
-        reason: "तिल कम उपजाऊ मिट्टी में भी अच्छी पैदावार देता है।",
-      });
+      crops.push(
+        {
+          name: "मूंगफली (Groundnut)",
+          profit: 38000,
+          yield: 600,
+          reason: "रेतीली मिट्टी में मूंगफली अच्छा उत्पादन देती है।",
+        },
+        {
+          name: "तिल (Sesame)",
+          profit: 32000,
+          yield: 500,
+          reason: "तिल कम उपजाऊ मिट्टी में भी अच्छी पैदावार देता है।",
+        }
+      );
     }
 
-    /** --- Water Availability --- **/
+    /** --------------------------  
+     *  WATER-BASED LOGIC  
+     * -------------------------- **/
     if (water === "कम") {
       crops.push({
         name: "बाजरा (Millet)",
@@ -85,11 +107,13 @@ export async function POST(req: Request) {
         name: "धान (Paddy)",
         profit: 70000,
         yield: 1500,
-        reason: "अधिक पानी की उपलब्धता में धान सबसे अच्छा।",
+        reason: "अधिक पानी में धान सबसे अच्छा।",
       });
     }
 
-    /** --- Temperature --- **/
+    /** --------------------------  
+     *  TEMPERATURE LOGIC  
+     * -------------------------- **/
     if (temperature) {
       const temp = parseFloat(temperature);
 
@@ -110,7 +134,9 @@ export async function POST(req: Request) {
       }
     }
 
-    /** --- Rainfall --- **/
+    /** --------------------------  
+     *  RAINFALL LOGIC  
+     * -------------------------- **/
     if (rainfall) {
       const rain = parseFloat(rainfall);
 
@@ -124,16 +150,27 @@ export async function POST(req: Request) {
       }
     }
 
-    return NextResponse.json({
-      success: true,
-      recommendations: crops.length > 0 
-        ? crops 
-        : [{ name: "कोई उपयुक्त फसल सुझाव नहीं मिला", profit: 0, yield: 0, reason: "डेटा के आधार पर कोई सुझाव नहीं।" }],
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        recommendations:
+          crops.length > 0
+            ? crops
+            : [
+                {
+                  name: "कोई उपयुक्त फसल सुझाव नहीं मिला",
+                  profit: 0,
+                  yield: 0,
+                  reason: "डेटा के आधार पर कोई सुझाव नहीं।",
+                },
+              ],
+      },
+      { headers: corsHeaders }
+    );
   } catch (error) {
     return NextResponse.json(
       { error: "Internal Server Error", details: String(error) },
-      { status: 500 }
+      { status: 500, headers: corsHeaders }
     );
   }
 }
